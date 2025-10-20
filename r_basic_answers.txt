@@ -1,0 +1,61 @@
+############################################################
+# ANSWERS — SOLUTIONS TO THE 5 PRACTICE QUESTIONS
+############################################################
+
+# 1) Create a numeric vector of 10 values, compute mean & sd, standardize
+set.seed(123)
+x <- rnorm(10, mean = 50, sd = 10)
+x_mean <- mean(x)
+x_sd   <- sd(x)
+x_z    <- (x - x_mean) / x_sd
+x; x_mean; x_sd; x_z
+
+# 2) From iris, filter Species == "setosa", compute mean of all numeric columns
+data(iris)
+iris_setosa <- subset(iris, Species == "setosa")
+numeric_cols <- sapply(iris_setosa, is.numeric)
+setosa_means <- colMeans(iris_setosa[, numeric_cols])
+setosa_means
+
+# 3) With mtcars, fit mpg ~ wt + hp, plot residuals vs fitted
+data(mtcars)
+fit_mtcars <- lm(mpg ~ wt + hp, data = mtcars)
+res_vals   <- resid(fit_mtcars)
+fit_vals   <- fitted(fit_mtcars)
+plot(fit_vals, res_vals,
+     xlab = "Fitted values", ylab = "Residuals",
+     main = "Residuals vs Fitted: mpg ~ wt + hp", pch = 19)
+abline(h = 0, lty = 2, lwd = 2)
+
+# 4) Using volcano, create a filled.contour plot
+data(volcano)
+filled.contour(volcano,
+  color.palette = terrain.colors,
+  plot.title = title(main = "Filled Contour: volcano", xlab = "x", ylab = "y"),
+  key.title   = title(main = "z")
+)
+
+# 5) Function: convert % sand/silt/clay to a simple texture class; apply to examples
+simple_texture <- function(sand, silt, clay) {
+  stopifnot(length(sand) == length(silt), length(silt) == length(clay))
+  if (any(abs(sand + silt + clay - 100) > 1e-6)) {
+    warning("Fractions should sum to 100.")
+  }
+  cls <- ifelse(clay >= 40, "Clayey",
+         ifelse(sand >= 70, "Sandy",
+         ifelse(silt >= 50, "Silty", "Loam")))
+  factor(cls, levels = c("Sandy","Silty","Loam","Clayey"))
+}
+
+# Examples
+tex_examples <- data.frame(
+  sand = c(75, 30, 20, 55, 80),
+  silt = c(15, 40, 60, 25, 10),
+  clay = c(10, 30, 20, 20, 10)
+)
+tex_examples$texture <- simple_texture(tex_examples$sand, tex_examples$silt, tex_examples$clay)
+tex_examples
+
+############################################################
+# End of solutions
+############################################################
