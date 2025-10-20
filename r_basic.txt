@@ -1,0 +1,343 @@
+############################################################
+# R BASICS — QUICK, HANDS-ON PLAYBOOK (copy/paste & run)
+# Audience: MSc students in Geography & Soil Science
+# Goal: Practice core R from zero → plotting & simple modeling
+# Data: built-in datasets (no external files needed)
+############################################################
+
+# ──────────────────────────────────────────────────────────
+# 0) OPTIONAL: INSTALL & LOAD USEFUL PACKAGES (ONE-TIME)
+#    (Uncomment the install.packages() lines the first time)
+# ──────────────────────────────────────────────────────────
+
+# install.packages("ggplot2")   # Grammar-of-graphics plots
+# install.packages("dplyr")     # Data manipulation
+# install.packages("readr")     # Fast read/write (not used for files here)
+# install.packages("tidyr")     # Tidy reshape tools
+
+suppressPackageStartupMessages({
+  # Load if present; everything below also works in base R
+  if (requireNamespace("ggplot2", quietly = TRUE)) library(ggplot2)
+  if (requireNamespace("dplyr", quietly = TRUE))  library(dplyr)
+  if (requireNamespace("tidyr", quietly = TRUE))  library(tidyr)
+})
+
+# Quick check of R setup:
+R.version.string
+sessionInfo()
+
+# ──────────────────────────────────────────────────────────
+# 1) ASSIGNMENT, OBJECTS, BASIC ARITHMETIC
+# ──────────────────────────────────────────────────────────
+
+a <- 10         # assign with <-
+b = 3           # assignment with = also works (prefer <- in R)
+a + b           # addition
+a - b           # subtraction
+a * b           # multiplication
+a / b           # division
+a^b             # power
+a %% b          # modulo (remainder)
+a %/% b         # integer division
+
+# Update an object
+a <- a + 5
+a
+
+# Remove an object
+rm(b)           # b is gone
+exists("b")     # FALSE
+
+# ──────────────────────────────────────────────────────────
+# 2) ATOMIC VECTORS & SEQUENCES
+# ──────────────────────────────────────────────────────────
+
+v_num  <- c(2.5, 7.1, 0, -4)      # numeric vector
+v_int  <- 1:5                     # integer sequence 1,2,3,4,5
+v_seq  <- seq(from = 0, to = 1, by = 0.2) # 0.0, 0.2, …, 1.0
+v_rep  <- rep(x = c(1, 2), times = 3)     # 1,2,1,2,1,2
+v_chr  <- c("sand", "silt", "clay")       # character vector
+v_log  <- c(TRUE, FALSE, TRUE)            # logical vector
+
+length(v_seq)      # length of a vector
+class(v_chr)       # class/type
+str(v_log)         # compact structure
+
+# Coercion (automatic)
+c(1, "x")          # becomes character
+as.numeric("3.14") # explicit coercion
+
+# ──────────────────────────────────────────────────────────
+# 3) INDEXING VECTORS ([], POSITIVE/NEGATIVE/LOGICAL, NAMES)
+# ──────────────────────────────────────────────────────────
+
+x <- c(10, 20, 30, 40, 50)
+names(x) <- c("A","B","C","D","E")  # name elements
+
+x[1]               # first element
+x[2:4]             # positions 2 to 4
+x[c(1,5)]          # pick 1 and 5
+x[-1]              # drop the first
+x[x > 25]          # logical filter
+x[c(TRUE, FALSE, TRUE, FALSE, TRUE)] # logical index
+x["C"]             # index by name
+x[c("B","E")]      # multiple names
+
+# ──────────────────────────────────────────────────────────
+# 4) MISSING VALUES (NA) & SIMPLE STATS
+# ──────────────────────────────────────────────────────────
+
+y <- c(1, NA, 3, 4, NA, 6)
+is.na(y)                 # which entries are NA?
+sum(is.na(y))            # how many NAs?
+mean(y, na.rm = TRUE)    # ignore NAs
+median(y, na.rm = TRUE)
+sd(y, na.rm = TRUE)
+summary(y)               # quick summary
+
+# ──────────────────────────────────────────────────────────
+# 5) MATRICES & APPLY
+# ──────────────────────────────────────────────────────────
+
+m <- matrix(1:12, nrow = 3, ncol = 4, byrow = TRUE)
+m                       # 3x4 matrix
+dim(m)                  # dimensions
+m[1, ]                  # row 1
+m[, 2]                  # column 2
+m[2, 3]                 # row 2, col 3
+rowSums(m); colSums(m)  # sums
+apply(m, 1, mean)       # mean by row
+apply(m, 2, mean)       # mean by column
+
+# ──────────────────────────────────────────────────────────
+# 6) FACTORS (CATEGORICAL DATA)
+# ──────────────────────────────────────────────────────────
+
+soil <- factor(c("sand","clay","silt","sand","silt"))
+soil
+levels(soil)            # categories
+table(soil)             # frequency table
+soil <- factor(soil, levels = c("sand","silt","clay"), ordered = TRUE)
+soil
+
+# ──────────────────────────────────────────────────────────
+# 7) LISTS & DATA FRAMES
+# ──────────────────────────────────────────────────────────
+
+# List: heterogeneous container
+L <- list(id = 101, name = "Plot_1", depths_cm = c(0,10,30,60), soil_class = soil[1])
+L$id
+L$depths_cm[2]
+
+# Data frame from scratch
+df <- data.frame(
+  site   = c("A","A","B","B"),
+  depth  = c(0,30,0,30),
+  clay   = c(12, 22, 18, 28),
+  silt   = c(20, 18, 22, 17),
+  sand   = c(68, 60, 60, 55)
+)
+str(df)
+head(df)
+nrow(df); ncol(df); names(df)
+
+# Access columns
+df$clay
+df[ , "sand"]
+df[ df$depth == 30, ]      # rows where depth is 30
+df[ df$clay > 20, c("site","clay") ]
+
+# Sort by clay descending
+df_sorted <- df[ order(-df$clay), ]
+df_sorted
+
+# Aggregate: mean clay by site
+aggregate(clay ~ site, data = df, FUN = mean)
+
+# ──────────────────────────────────────────────────────────
+# 8) BUILT-IN DATASETS: iris, mtcars, airquality, CO2, volcano
+# ──────────────────────────────────────────────────────────
+
+data(iris)        # flower measurements
+data(mtcars)      # car specs
+data(airquality)  # New York air quality (1973)
+data(CO2)         # CO2 uptake in plants
+data(volcano)     # Maunga Whau topographic data (matrix)
+
+# Explore quickly
+head(iris); summary(iris)
+head(mtcars); summary(mtcars)
+summary(airquality)
+summary(CO2)
+dim(volcano)  # elevation matrix dims
+
+# ──────────────────────────────────────────────────────────
+# 9) CONTROL FLOW & FUNCTIONS
+# ──────────────────────────────────────────────────────────
+
+# If/else
+z <- 15
+if (z > 10) {
+  msg <- "z is large"
+} else {
+  msg <- "z is small"
+}
+msg
+
+# For loop
+vals <- c(2, 4, 6)
+res  <- c()
+for (i in vals) {
+  res <- c(res, i^2)
+}
+res
+
+# While loop
+count <- 3
+while (count > 0) {
+  count <- count - 1
+}
+count
+
+# Write your own function
+soil_texture_class <- function(sand, silt, clay) {
+  stopifnot(length(sand)==length(silt), length(silt)==length(clay))
+  if (any(abs(sand + silt + clay - 100) > 1e-6)) {
+    warning("Fractions should sum to 100.")
+  }
+  out <- ifelse(clay > 40, "Clayey",
+         ifelse(sand > 70, "Sandy",
+         ifelse(silt > 50, "Silty", "Loam")))
+  factor(out, levels = c("Sandy","Silty","Loam","Clayey"))
+}
+soil_texture_class(df$sand, df$silt, df$clay)
+
+# Apply family
+lapply(list(iris=iris, mtcars=mtcars), nrow)
+sapply(list(iris=iris, mtcars=mtcars), ncol)
+
+# ──────────────────────────────────────────────────────────
+# 10) BASIC PLOTTING (BASE R)
+# ──────────────────────────────────────────────────────────
+
+# Scatterplot with regression line (mtcars)
+plot(mtcars$wt, mtcars$mpg,
+     xlab = "Weight (1000 lbs)", ylab = "Miles per Gallon",
+     main = "Fuel efficiency decreases with weight")
+fit <- lm(mpg ~ wt, data = mtcars)
+abline(fit, lwd = 2)
+
+# Histogram & density (iris Sepal.Length)
+hist(iris$Sepal.Length, breaks = 12, main = "Iris Sepal Length", xlab = "cm")
+lines(density(iris$Sepal.Length), lwd = 2)
+
+# Boxplots by species
+boxplot(Sepal.Length ~ Species, data = iris,
+        main = "Sepal Length by Species", xlab = "Species", ylab = "cm")
+
+# Barplot of soil categories (from earlier factor example)
+barplot(table(soil), main = "Soil Category Counts", ylab = "Frequency")
+
+# Matrix as raster image & contours (volcano: topography)
+image(volcano, main = "Topography (volcano data)", xlab = "x", ylab = "y")
+contour(volcano, add = TRUE)
+
+# Perspective 3D surface (rotate the z-axis visually)
+# (May need a larger plot window)
+persp(volcano, theta = 135, phi = 20, expand = 0.6, shade = 0.4,
+      main = "Volcano 3D Surface (elevation)")
+
+# Multiple simple plots side by side
+old_par <- par(mfrow = c(1,3))
+plot(airquality$Temp, airquality$Ozone, xlab = "Temp (F)", ylab = "Ozone (ppb)",
+     main = "Ozone vs Temp", pch = 19)
+plot(airquality$Wind, airquality$Ozone, xlab = "Wind (mph)", ylab = "Ozone (ppb)",
+     main = "Ozone vs Wind", pch = 19)
+boxplot(Ozone ~ Month, data = airquality, main = "Ozone by Month",
+        xlab = "Month (5=May, …)", ylab = "Ozone (ppb)")
+par(old_par)  # restore
+
+# OPTIONAL: ggplot2 versions if package loaded
+if ("ggplot2" %in% .packages()) {
+  ggplot(mtcars, aes(wt, mpg)) +
+    geom_point() +
+    geom_smooth(method = "lm", se = FALSE) +
+    labs(title = "mpg ~ wt (ggplot2)", x = "Weight (1000 lbs)", y = "MPG")
+
+  ggplot(iris, aes(Species, Sepal.Length)) +
+    geom_boxplot() +
+    labs(title = "Iris Sepal Length by Species (ggplot2)", x = "Species", y = "cm")
+}
+
+# ──────────────────────────────────────────────────────────
+# 11) DATA WRANGLING (BASE R + OPTIONAL DPLYR)
+# ──────────────────────────────────────────────────────────
+
+# Base R: filter rows, select cols, create new column
+aq <- na.omit(airquality)           # drop rows with NAs
+aq_small <- aq[aq$Temp > 80, c("Ozone","Solar.R","Wind","Temp","Month")]
+aq_small$Ozone_per_Wind <- aq_small$Ozone / aq_small$Wind
+head(aq_small)
+
+# Grouped mean with aggregate (base)
+aggregate(Ozone ~ Month, data = aq, FUN = mean)
+
+# OPTIONAL dplyr equivalents if loaded
+if ("dplyr" %in% .packages()) {
+  airquality %>%
+    drop_na() %>%
+    filter(Temp > 80) %>%
+    transmute(Month, Temp, Ozone, Wind, Ozone_per_Wind = Ozone / Wind) %>%
+    arrange(desc(Ozone_per_Wind)) %>%
+    head(5)
+}
+
+# ──────────────────────────────────────────────────────────
+# 12) SIMPLE MODELING & PREDICTION
+# ──────────────────────────────────────────────────────────
+
+# Linear model: Ozone ~ Temp + Wind (airquality without NAs)
+aq2 <- na.omit(airquality[, c("Ozone","Temp","Wind","Solar.R")])
+mod <- lm(Ozone ~ Temp + Wind + Solar.R, data = aq2)
+summary(mod)
+
+# Predict for new conditions
+newdata <- data.frame(Temp = c(70, 90), Wind = c(10, 5), Solar.R = c(150, 300))
+predict(mod, newdata = newdata)
+
+# Visualize partial relationship (Temp vs Ozone controlling others roughly)
+plot(aq2$Temp, aq2$Ozone, pch = 19,
+     xlab = "Temp (F)", ylab = "Ozone (ppb)",
+     main = "Ozone vs Temp (+ Wind & Solar.R in model)")
+# Add a smoothed line (loess) as a visual guide
+lines(lowess(aq2$Temp, aq2$Ozone), lwd = 2)
+
+# ──────────────────────────────────────────────────────────
+# 13) RANDOMNESS & REPRODUCIBILITY
+# ──────────────────────────────────────────────────────────
+
+set.seed(42)          # make results reproducible
+rnorm(5, mean = 0, sd = 1)   # normal random numbers
+sample(1:100, size = 5)      # random sample without replacement
+
+# ──────────────────────────────────────────────────────────
+# 14) SAVING A PLOT TO FILE (PNG)
+# ──────────────────────────────────────────────────────────
+
+png(filename = "iris_scatter.png", width = 800, height = 600, res = 120)
+plot(iris$Sepal.Length, iris$Petal.Length,
+     xlab = "Sepal Length (cm)", ylab = "Petal Length (cm)",
+     main = "Iris: Sepal vs Petal Length", pch = 19)
+dev.off()  # file saved to working directory (getwd())
+
+# ──────────────────────────────────────────────────────────
+# 15) QUICK PRACTICE TASKS (COMMENTED TODOs)
+# ──────────────────────────────────────────────────────────
+# TODO: 1) Create a numeric vector of 10 values, compute mean & sd, and standardize it.
+# TODO: 2) From iris, filter only Species == "setosa", compute mean of all numeric cols.
+# TODO: 3) With mtcars, fit mpg ~ wt + hp, plot residuals vs fitted.
+# TODO: 4) Using volcano, create a filled.contour plot.
+# TODO: 5) Write a function that converts % sand/silt/clay to a simple class using thresholds.
+
+# End of playbook
+############################################################
